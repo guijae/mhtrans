@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Thông dịch viên MHGROUP</string>
+    <string name="status_waiting">Đang chờ</string>
+    <string name="status_listening">Đang nhận diện</string>
+    <string name="status_translating">Đang dịch...</string>
+    <string name="btn_start">🎙 Bắt đầu dịch</string>
+    <string name="btn_stop">■ Dừng lại</string>
+    <string name="btn_history">📋 Nhật ký trò chuyện</string>
+    <string name="speak_ko">Hãy nói tiếng Hàn</string>
+    <string name="speak_vi">Hãy nói tiếng Việt</string>
+</resources>
