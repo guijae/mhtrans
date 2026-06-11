@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Node.js 20 Deprecation 경고 해결을 위해 추가
 
     steps:
     - uses: actions/checkout@v4
