@@ -136,16 +136,15 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         
-        // 핵심 수정: 현재 언어를 기본으로 하되, 한국어와 베트남어 모두에 대해 인식을 시도하도록 설정
-        String primaryLang = isKorean ? "ko-KR" : "vi-VN";
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, primaryLang);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, primaryLang);
-        intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, false);
+        String langTag = isKorean ? "ko-KR" : "vi-VN";
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, langTag);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, langTag);
         
-        // 다중 언어 지원 힌트 추가
-        String[] languages = {"ko-KR", "vi-VN"};
-        intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, languages);
-
+        // 베트남어 인식 시 설정 강화 (요청 사항 반영)
+        if (!isKorean) {
+            intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true);
+        }
+        
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 
         // 연속 발화 지원 설정
@@ -175,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     private final RecognitionListener recognitionListener = new RecognitionListener() {
         @Override
         public void onReadyForSpeech(Bundle params) {
-            tvStatus.setText("말씀하세요...");
+            tvStatus.setText(isKorean ? "한국어로 말씀하세요..." : "Hãy nói tiếng Việt...");
         }
 
         @Override
@@ -194,7 +193,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onEndOfSpeech() {
             tvStatus.setText("처리 중...");
-            // onEndOfSpeech 이후 결과가 안 나올 경우를 대비한 자동 재시작은 onError에서 처리
         }
 
         @Override
@@ -204,6 +202,10 @@ public class MainActivity extends AppCompatActivity {
                 case SpeechRecognizer.ERROR_AUDIO: message = "오디오 에러"; break;
                 case SpeechRecognizer.ERROR_SPEECH_TIMEOUT: message = "시간 초과"; break;
                 case SpeechRecognizer.ERROR_NO_MATCH: message = "인식 결과 없음"; break;
+                case 13: // ERROR_LANGUAGE_NOT_SUPPORTED
+                    message = "베트남어 음성인식 언어팩을 설치해주세요";
+                    showVoiceSettings();
+                    break;
                 default: message = "인식 오류: " + error; break;
             }
             Log.e("Speech", message);
@@ -223,7 +225,6 @@ public class MainActivity extends AppCompatActivity {
             ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             if (matches != null && !matches.isEmpty()) {
                 String text = matches.get(0);
-                detectAndSetLanguage(text);
                 
                 if (isKorean) tvKoText.setText(text);
                 else tvViText.setText(text);
@@ -245,19 +246,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onEvent(int eventType, Bundle params) {}
     };
-
-    private void detectAndSetLanguage(String text) {
-        boolean hasKorean = text.matches(".*[\\uAC00-\\uD7AF\\u1100-\\u11FF]+.*");
-        boolean hasVietnamese = text.matches(".*[àáâãèéêìíòóôõùúăđĩũơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]+.*");
-
-        if (hasKorean && !hasVietnamese) {
-            isKorean = true;
-        } else if (hasVietnamese && !hasKorean) {
-            isKorean = false;
-        }
-        // 둘 다 없거나 둘 다 있는 경우 현재 언어 유지
-        runOnUiThread(this::updateLangLabel);
-    }
 
     private void translate(String text) {
         if (text == null || text.trim().isEmpty()) return;
@@ -284,8 +272,11 @@ public class MainActivity extends AppCompatActivity {
                         // TTS 출력
                         speak(translatedText, isKorean ? new Locale("vi") : Locale.KOREAN);
 
+                        // 핵심: 번역 완료 후 다음 인식을 위해 언어 교대
+                        isKorean = !isKorean;
+                        updateLangLabel();
+
                         isTranslating = false;
-                        // 번역 완료 후 다음 인식을 위해 자동 재시작
                         if (isListening) {
                             mainHandler.postDelayed(this::startListening, 1500);
                         }
@@ -329,6 +320,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLangLabel() {
         tvSpeakLabel.setText(isKorean ? "한국어로 말씀하세요" : "Hãy nói tiếng Việt");
+    }
+
+    private void showVoiceSettings() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.setClassName("com.google.android.googlequicksearchbox",
+                    "com.google.android.voicesearch.settings.VoiceSearchPreferences");
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "구글 음성 설정을 열 수 없습니다", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void openHistory() {
