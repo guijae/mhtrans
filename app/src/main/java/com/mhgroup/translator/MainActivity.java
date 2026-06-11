@@ -135,7 +135,17 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isKorean ? "ko-KR" : "vi-VN");
+        
+        // 핵심 수정: 현재 언어를 기본으로 하되, 한국어와 베트남어 모두에 대해 인식을 시도하도록 설정
+        String primaryLang = isKorean ? "ko-KR" : "vi-VN";
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, primaryLang);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, primaryLang);
+        intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, false);
+        
+        // 다중 언어 지원 힌트 추가
+        String[] languages = {"ko-KR", "vi-VN"};
+        intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, languages);
+
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 
         // 연속 발화 지원 설정
