@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onRmsChanged(float rmsdB) {
-            if (rmsdB > 2) waveformView.triggerPulse();
+            waveformView.setVolume(rmsdB);
         }
 
         @Override
