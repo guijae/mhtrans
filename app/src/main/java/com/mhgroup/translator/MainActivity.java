@@ -10,10 +10,10 @@ import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,6 +27,7 @@ import com.google.mlkit.nl.translate.Translator;
 import com.google.mlkit.nl.translate.TranslatorOptions;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,17 +37,24 @@ public class MainActivity extends AppCompatActivity {
     private WaveformView waveformView;
     private LinearLayout layoutListening;
 
-    // 음성인식 (Google SpeechRecognizer)
+    // 음성인식
     private SpeechRecognizer speechRecognizer;
     private boolean isListening = false;
-    private boolean isKorean = true; 
+    private boolean isKorean = true;
+    private boolean isTranslating = false; // 연속 발화 제어용 플래그
 
     // 번역
     private Translator koToViTranslator, viToKoTranslator;
 
-    // 히스토리
+    // TTS
+    private TextToSpeech tts;
+    private boolean isTtsReady = false;
+
+    // 히스토리 및 자동 저장
     private HistoryManager historyManager;
     private StringBuilder currentSession = new StringBuilder();
+
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,16 +64,17 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         initTranslators();
         initSpeechRecognizer();
+        initTTS();
         historyManager = new HistoryManager(this);
     }
 
     private void initViews() {
-        tvKoText    = findViewById(R.id.tv_ko_text);
-        tvViText    = findViewById(R.id.tv_vi_text);
-        tvStatus    = findViewById(R.id.tv_status);
+        tvKoText = findViewById(R.id.tv_ko_text);
+        tvViText = findViewById(R.id.tv_vi_text);
+        tvStatus = findViewById(R.id.tv_status);
         tvSpeakLabel = findViewById(R.id.tv_speak_label);
-        btnStart    = findViewById(R.id.btn_start);
-        btnHistory  = findViewById(R.id.btn_history);
+        btnStart = findViewById(R.id.btn_start);
+        btnHistory = findViewById(R.id.btn_history);
         waveformView = findViewById(R.id.waveform_view);
         layoutListening = findViewById(R.id.layout_listening);
 
@@ -98,6 +107,16 @@ public class MainActivity extends AppCompatActivity {
         speechRecognizer.setRecognitionListener(recognitionListener);
     }
 
+    private void initTTS() {
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                isTtsReady = true;
+            } else {
+                Log.e("TTS", "초기화 실패");
+            }
+        });
+    }
+
     private void toggleListening() {
         if (isListening) {
             stopListening();
@@ -112,16 +131,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startListening() {
+        if (speechRecognizer == null) initSpeechRecognizer();
+
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        // 현재 언어 설정 (한국어: ko-KR, 베트남어: vi-VN)
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, isKorean ? "ko-KR" : "vi-VN");
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 
+        // 연속 발화 지원 설정
+        intent.putExtra("android.speech.extra.SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS", 3000L);
+        intent.putExtra("android.speech.extra.SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS", 2000L);
+        intent.putExtra("android.speech.extra.SPEECH_INPUT_MINIMUM_LENGTH_MILLIS", 2000L);
+
         runOnUiThread(() -> {
-            speechRecognizer.startListening(intent);
-            isListening = true;
-            updateListeningUI(true);
+            try {
+                speechRecognizer.startListening(intent);
+                isListening = true;
+                updateListeningUI(true);
+            } catch (Exception e) {
+                Log.e("Speech", "시작 오류: " + e.getMessage());
+            }
         });
     }
 
@@ -146,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onRmsChanged(float rmsdB) {
-            // 소리 크기에 따라 파형 반응
             if (rmsdB > 2) waveformView.triggerPulse();
         }
 
@@ -156,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onEndOfSpeech() {
             tvStatus.setText("처리 중...");
+            // onEndOfSpeech 이후 결과가 안 나올 경우를 대비한 자동 재시작은 onError에서 처리
         }
 
         @Override
@@ -168,11 +197,14 @@ public class MainActivity extends AppCompatActivity {
                 default: message = "인식 오류: " + error; break;
             }
             Log.e("Speech", message);
-            if (isListening) {
-                // 짧은 대기 후 다시 리스닝 (연속 통역 모드 유지)
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    if (isListening) startListening();
-                }, 1000);
+
+            // 연속 발화 재시작 로직
+            if (isListening && !isTranslating) {
+                if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                    mainHandler.postDelayed(() -> {
+                        if (isListening && !isTranslating) startListening();
+                    }, 300);
+                }
             }
         }
 
@@ -181,6 +213,8 @@ public class MainActivity extends AppCompatActivity {
             ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             if (matches != null && !matches.isEmpty()) {
                 String text = matches.get(0);
+                detectAndSetLanguage(text);
+                
                 if (isKorean) tvKoText.setText(text);
                 else tvViText.setText(text);
                 
@@ -202,39 +236,70 @@ public class MainActivity extends AppCompatActivity {
         public void onEvent(int eventType, Bundle params) {}
     };
 
+    private void detectAndSetLanguage(String text) {
+        boolean hasKorean = text.matches(".*[\\uAC00-\\uD7AF\\u1100-\\u11FF]+.*");
+        boolean hasVietnamese = text.matches(".*[àáâãèéêìíòóôõùúăđĩũơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]+.*");
+
+        if (hasKorean && !hasVietnamese) {
+            isKorean = true;
+        } else if (hasVietnamese && !hasKorean) {
+            isKorean = false;
+        }
+        // 둘 다 없거나 둘 다 있는 경우 현재 언어 유지
+        runOnUiThread(this::updateLangLabel);
+    }
+
     private void translate(String text) {
         if (text == null || text.trim().isEmpty()) return;
 
+        isTranslating = true;
         tvStatus.setText("번역 중...");
         Translator translator = isKorean ? koToViTranslator : viToKoTranslator;
 
         translator.translate(text)
                 .addOnSuccessListener(translatedText -> {
-                    if (isKorean) {
-                        tvViText.setText(translatedText);
-                    } else {
-                        tvKoText.setText(translatedText);
-                    }
-                    tvStatus.setText("완료");
+                    runOnUiThread(() -> {
+                        if (isKorean) {
+                            tvViText.setText(translatedText);
+                        } else {
+                            tvKoText.setText(translatedText);
+                        }
+                        tvStatus.setText("완료");
 
-                    // 히스토리 추가
-                    String entry = (isKorean ? "[KO] " : "[VI] ") + text
-                            + "\n→ " + (isKorean ? "[VI] " : "[KO] ") + translatedText + "\n\n";
-                    currentSession.append(entry);
+                        // 히스토리 추가
+                        String entry = (isKorean ? "[KO] " : "[VI] ") + text
+                                + "\n→ " + (isKorean ? "[VI] " : "[KO] ") + translatedText + "\n\n";
+                        currentSession.append(entry);
 
-                    // 언어 자동 전환
-                    isKorean = !isKorean;
-                    updateLangLabel();
+                        // TTS 출력
+                        speak(translatedText, isKorean ? new Locale("vi") : Locale.KOREAN);
 
-                    // 다음 인식을 위해 자동으로 리스닝 시작 (통역 모드 유지)
-                    if (isListening) {
-                        new Handler(Looper.getMainLooper()).postDelayed(this::startListening, 1500);
-                    }
+                        isTranslating = false;
+                        // 번역 완료 후 다음 인식을 위해 자동 재시작
+                        if (isListening) {
+                            mainHandler.postDelayed(this::startListening, 1500);
+                        }
+                    });
                 })
                 .addOnFailureListener(e -> {
-                    tvStatus.setText("번역 실패");
-                    if (isListening) startListening();
+                    runOnUiThread(() -> {
+                        tvStatus.setText("번역 실패");
+                        isTranslating = false;
+                        if (isListening) startListening();
+                    });
                 });
+    }
+
+    private void speak(String text, Locale locale) {
+        if (isTtsReady && tts != null) {
+            int result = tts.setLanguage(locale);
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Toast.makeText(this, "지원되지 않는 언어입니다", Toast.LENGTH_SHORT).show();
+            } else {
+                tts.stop();
+                tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "TranslationTTS");
+            }
+        }
     }
 
     private void updateListeningUI(boolean listening) {
@@ -257,23 +322,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openHistory() {
+        autoSaveSession();
+        startActivity(new Intent(this, HistoryActivity.class));
+    }
+
+    private void autoSaveSession() {
         if (currentSession.length() > 0) {
-            historyManager.saveSession(currentSession.toString());
+            boolean success = historyManager.saveSession(currentSession.toString());
+            if (!success) {
+                Toast.makeText(this, "기록 저장에 실패했습니다", Toast.LENGTH_SHORT).show();
+            }
             currentSession = new StringBuilder();
         }
-        startActivity(new Intent(this, HistoryActivity.class));
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        autoSaveSession();
+        mainHandler.removeCallbacksAndMessages(null);
+        
         if (speechRecognizer != null) {
             speechRecognizer.destroy();
         }
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
         if (koToViTranslator != null) koToViTranslator.close();
         if (viToKoTranslator != null) viToKoTranslator.close();
-        if (currentSession.length() > 0) {
-            historyManager.saveSession(currentSession.toString());
-        }
+        
+        super.onDestroy();
     }
 }
