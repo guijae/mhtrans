@@ -1,54 +1,47 @@
-# MH그룹 AI통역 - Android APK 빌드 가이드
+# MH그룹 AI통역 - Android 프로젝트 가이드
 
-## 기능
-- 한국어 ↔ 베트남어 실시간 통역
-- MLKit 오프라인 번역 (언어팩 최초 1회 다운로드)
-- 음성 파형 시각화
-- 대화 TXT 저장 / 삭제
-- 카카오톡 공유
-- 큰 글씨 UI
-
----
-
-## 빌드 방법 (5단계)
-
-### 1단계. Android Studio 설치
-- https://developer.android.com/studio 에서 다운로드
-- 설치 후 실행
-
-### 2단계. 프로젝트 열기
-- Android Studio 실행
-- `File > Open` 선택
-- 이 폴더(MHTranslator) 선택
-
-### 3단계. Vosk 모델 추가 (중요!)
-Vosk 오프라인 음성인식 모델을 다운로드해서 추가해야 합니다.
-
-1. https://alphacephei.com/vosk/models 접속
-2. `vosk-model-small-ko-0.22` 다운로드 (한국어, 약 82MB)
-3. `vosk-model-small-vi-0.4` 다운로드 (베트남어, 약 37MB)
-4. 압축 해제 후 폴더명 변경:
-   - `vosk-model-small-ko` (한국어)
-   - `vosk-model-small-vi` (베트남어)
-5. `app/src/main/assets/` 폴더 안에 두 폴더 복사
-
-### 4단계. 빌드
-- Android Studio 상단 `▶ Run` 버튼 클릭
-- 또는 `Build > Build Bundle(s)/APK(s) > Build APK(s)`
-
-### 5단계. APK 파일 위치
-```
-MHTranslator/app/build/outputs/apk/debug/app-debug.apk
-```
+## 주요 기능
+- **실시간 통역**: 한국어 ↔ 베트남어 음성 인식 및 번역
+- **오프라인 번역**: Google MLKit을 이용한 오프라인 번역 (최초 1회 언어팩 다운로드 필요)
+- **시각화**: 음성 입력 강도에 따른 파형(Waveform) 애니메이션
+- **기록 관리**: 대화 내용을 TXT 파일로 자동 저장 및 히스토리 관리
+- **공유**: 저장된 기록을 카카오톡 등 외부 앱으로 공유
 
 ---
 
-## 저장 폴더
-대화 기록: `/내부저장소/Documents/MH그룹통역기록/`
+## 빌드 및 실행 가이드
+
+### 1. 프로젝트 열기
+- Android Studio를 실행하고 `File > Open`을 클릭합니다.
+- 본 프로젝트 폴더(`MHTranslator`)를 선택하여 엽니다.
+
+### 2. Gradle 동기화
+- 프로젝트가 열리면 자동으로 Gradle 동기화가 진행됩니다. 
+- 만약 오류가 발생하면 상단 `File > Sync Project with Gradle Files`를 클릭하세요.
+
+### 3. 앱 실행
+- 안드로이드 기기(실제 폰 또는 에뮬레이터)를 연결합니다.
+- 상단의 초록색 재생(`▶`) 버튼을 클릭하여 앱을 설치하고 실행합니다.
+
+### 4. APK 파일 생성 (필요 시)
+- `Build > Build Bundle(s) / APK(s) > Build APK(s)`를 선택합니다.
+- 생성된 APK 위치: `app/build/outputs/apk/debug/app-debug.apk`
+
+---
+
+## 상세 설정 및 데이터 저장
+- **음성 인식**: 시스템 기본 음성 인식 서비스(Google)를 사용합니다.
+- **데이터 저장 경로**: 
+  - Android 10 이상: `Documents/MH그룹통역기록/` (앱 전용 저장소 내)
+  - Android 10 미만: 외부 공용 저장소의 `Documents/MH그룹통역기록/`
+- **사용 라이브러리**:
+  - MLKit Translate (번역)
+  - AndroidX (UI 및 WorkManager)
+  - GSON (데이터 처리)
 
 ---
 
 ## 주의사항
-- 최초 실행 시 MLKit 번역 팩 다운로드 필요 (약 50~100MB)
-- Vosk 모델 없이는 음성인식 안 됨 (3단계 필수)
-- Android 7.0 (API 24) 이상 필요
+- **최초 실행 시**: 한국어 및 베트남어 번역 모델을 다운로드하므로 인터넷 연결이 필요합니다. (약 100MB 소모)
+- **권한**: 음성 인식을 위해 마이크 사용 권한 및 파일 저장을 위한 저장소 권한이 필요합니다.
+- **최소 사양**: Android 7.0 (API 24) 이상 기기가 필요합니다.
