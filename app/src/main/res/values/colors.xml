@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#3FB950</color>
+    <color name="primary_variant">#2EA043</color>
+    <color name="background">#0D1117</color>
+    <color name="surface">#161B22</color>
+    <color name="on_surface">#E6EDF3</color>
+    <color name="text_secondary">#7D8590</color>
+    <color name="error">#DA3633</color>
+    <color name="vietnamese_accent">#F78166</color>
+</resources>

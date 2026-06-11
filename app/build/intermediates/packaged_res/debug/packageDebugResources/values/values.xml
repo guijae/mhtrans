@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#0D1117</color>
+    <color name="error">#DA3633</color>
+    <color name="on_surface">#E6EDF3</color>
+    <color name="primary">#3FB950</color>
+    <color name="primary_variant">#2EA043</color>
+    <color name="surface">#161B22</color>
+    <color name="text_secondary">#7D8590</color>
+    <color name="vietnamese_accent">#F78166</color>
+    <string name="app_name">MH그룹 AI통역</string>
+    <string name="btn_history">📋 대화 내역</string>
+    <string name="btn_start">🎙 통역 시작</string>
+    <string name="btn_stop">■ 중지</string>
+    <string name="speak_ko">한국어로 말씀하세요</string>
+    <string name="speak_vi">Hãy nói tiếng Việt</string>
+    <string name="status_listening">인식 중</string>
+    <string name="status_translating">번역 중...</string>
+    <string name="status_waiting">대기 중</string>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
+        <item name="colorOnPrimary">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+    </style>
+    <style name="SplashTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+    </style>
+</resources>

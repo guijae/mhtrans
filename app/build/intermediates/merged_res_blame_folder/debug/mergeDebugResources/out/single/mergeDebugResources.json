@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/layout_item_history.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/layout/item_history.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/layout_activity_history.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/layout/activity_history.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/drawable_bg_status.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/drawable/bg_status.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/layout_activity_main.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/drawable_bg_dialog.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/drawable/bg_dialog.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/layout_dialog_download.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/layout/dialog_download.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/layout_activity_downloading.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/layout/activity_downloading.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/layout_activity_splash.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/drawable_ic_launcher.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/drawable/ic_launcher.xml"
+    },
+    {
+        "merged": "com.mhgroup.translator.app-debug-42:/layout_dialog_mic_permission.xml.flat",
+        "source": "com.mhgroup.translator.app-main-44:/layout/dialog_mic_permission.xml"
+    }
+]

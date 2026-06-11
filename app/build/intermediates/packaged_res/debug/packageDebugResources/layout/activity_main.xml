@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0D1117"
+    android:orientation="vertical">
+
+    <!-- 헤더 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#161B22"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_launcher"
+            android:background="@android:color/white"
+            android:padding="4dp"
+            android:layout_marginEnd="16dp"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MH그룹 AI통역"
+                android:textColor="#E6EDF3"
+                android:textSize="22sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="KO · VI 실시간 통역"
+                android:textColor="#7D8590"
+                android:textSize="13sp"/>
+        </LinearLayout>
+
+        <!-- 상태 표시 -->
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="대기 중"
+            android:textColor="#3FB950"
+            android:textSize="14sp"
+            android:background="@drawable/bg_status"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="6dp"/>
+
+    </LinearLayout>
+
+    <!-- 언어 표시 패널 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- 한국어 패널 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#161B22"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🇰🇷 한국어"
+                android:textColor="#3FB950"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:id="@+id/tv_ko_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="한국어가 여기 표시됩니다"
+                android:textColor="#A8B4C2"
+                android:textSize="20sp"
+                android:lineSpacingMultiplier="1.5"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#21262D"/>
+
+        <!-- 베트남어 패널 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#161B22"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🇻🇳 Tiếng Việt"
+                android:textColor="#F78166"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:id="@+id/tv_vi_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tiếng Việt hiển thị ở đây"
+                android:textColor="#A8B4C2"
+                android:textSize="20sp"
+                android:lineSpacingMultiplier="1.5"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 음성 시각화 영역 (인식 중에만 표시) -->
+    <LinearLayout
+        android:id="@+id/layout_listening"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#1C2128"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_speak_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="한국어로 말씀하세요"
+            android:textColor="#E6EDF3"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- 파형 뷰 -->
+        <com.mhgroup.translator.WaveformView
+            android:id="@+id/waveform_view"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="8dp"/>
+
+    </LinearLayout>
+
+    <!-- 하단 버튼 영역 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#161B22"
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- 통역 시작 버튼 -->
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="🎙 통역 시작"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#0D1117"
+            android:backgroundTint="#3FB950"
+            android:layout_marginBottom="12dp"
+            style="@style/Widget.Material3.Button"/>
+
+        <!-- 대화 내역 버튼 -->
+        <Button
+            android:id="@+id/btn_history"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="📋 대화 내역"
+            android:textSize="17sp"
+            android:textColor="#E6EDF3"
+            android:backgroundTint="#21262D"
+            style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+    </LinearLayout>
+
+</LinearLayout>

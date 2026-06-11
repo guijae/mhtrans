@@ -1,0 +1,4 @@
+-keep class com.alphacephei.vosk.** { *; }
+-keep class org.vosk.** { *; }
+-keep class com.google.mlkit.** { *; }
+-dontwarn org.vosk.**
